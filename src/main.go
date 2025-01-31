@@ -14,6 +14,7 @@ var (
 )
 
 func main() {
+	l := newLogger(true)
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&isHook, "hook", false, "Indicates if pacman ran this program as a hook")
 	flag.BoolVar(&seedConfig, "seed-config", false, "Seed the config file with default values")
@@ -25,13 +26,13 @@ func main() {
 	}
 
 	if seedConfig {
-		fmt.Println("Seeding config")
+		l.debug("Seeding config file")
 		SeedConfig()
 		return
 	}
 
 	if !isHook {
-		fmt.Println("This program should only be run as a pacman hook or with the -seed-config flag")
+		l.error("This program should only be run as a pacman hook or with the -seed-config flag")
 		flag.Usage()
 		return
 	}
@@ -39,8 +40,8 @@ func main() {
 	_ = GetConfig()
 
 	ppid := os.Getppid()
-	fmt.Println("Parent PID: ", ppid)
-	fmt.Println("Parent CMD: ", getProcessArgs(ppid))
+	l.debug("Parent PID: ", ppid)
+	l.debug("Parent CMD: ", getProcessArgs(ppid))
 }
 
 func getProcessArgs(pid int) string {
