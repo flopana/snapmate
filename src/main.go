@@ -26,8 +26,13 @@ func main() {
 	}
 
 	if seedConfig {
-		l.debug("Seeding config file")
-		SeedConfig()
+		l.info("Seeding config file")
+		err := SeedConfig()
+		if err != nil {
+			l.error(err.Error())
+			return
+		}
+		l.info("Config file seeded")
 		return
 	}
 

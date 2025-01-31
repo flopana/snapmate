@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"gopkg.in/ini.v1"
 	"os"
@@ -9,7 +10,9 @@ import (
 type Conf struct {
 	MaxSnapshots    int
 	DeleteSnapshots bool
-	LogToStdout     bool
+	AskUser         bool // Ask user if a snapshot should be taken
+	MinTimeBetween  int  // Minimum time between snapshots in minutes
+	DebugLog        bool
 }
 
 func GetConfig() Conf {
@@ -43,7 +46,7 @@ func GetConfig() Conf {
 	config.DeleteSnapshots = section.Key("deleteSnapshots").MustBool(defaultValueConf.DeleteSnapshots)
 
 	section = inidata.Section("logging")
-	config.LogToStdout = section.Key("logToStdout").MustBool(defaultValueConf.LogToStdout)
+	config.DebugLog = section.Key("debugLog").MustBool(defaultValueConf.DebugLog)
 
 	return config
 }
@@ -52,33 +55,37 @@ func getDefaultConfig() Conf {
 	return Conf{
 		MaxSnapshots:    5,
 		DeleteSnapshots: true,
-		LogToStdout:     true,
+		AskUser:         false,
+		MinTimeBetween:  60,
+		DebugLog:        true,
 	}
 }
 
-func SeedConfig() {
+func SeedConfig() error {
 	defaultValueConf := getDefaultConfig()
 	home, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println("Could not get user home directory")
-		fmt.Println(err)
+		return err
 	}
 	path := home + "/.config/snapmate/config.ini"
 
 	// Check if config file already exists
 	if _, err := os.Stat(path); err == nil {
-		fmt.Println("Config file already exists")
-		return
+		return errors.New("config file already exists")
 	}
 
 	iniFile := ini.Empty()
 	iniFile.Section("snapshots").Key("maxSnapshots").SetValue(fmt.Sprintf("%d", defaultValueConf.MaxSnapshots))
 	iniFile.Section("snapshots").Key("deleteSnapshots").SetValue(fmt.Sprintf("%t", defaultValueConf.DeleteSnapshots))
-	iniFile.Section("logging").Key("logToStdout").SetValue(fmt.Sprintf("%t", defaultValueConf.LogToStdout))
+	iniFile.Section("snapshots").Key("askUser").SetValue(fmt.Sprintf("%t", defaultValueConf.AskUser))
+	iniFile.Section("snapshots").Key("minTimeBetween").SetValue(fmt.Sprintf("%d", defaultValueConf.MinTimeBetween))
+	iniFile.Section("logging").Key("debugLog").SetValue(fmt.Sprintf("%t", defaultValueConf.DebugLog))
 
 	err = iniFile.SaveTo(path)
 	if err != nil {
-		fmt.Println("Could not save config file")
-		fmt.Println(err)
+		return err
 	}
+
+	return nil
 }
