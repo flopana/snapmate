@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"snapmate/config"
+	"snapmate/logger"
+	"snapmate/snaphots"
 )
 
 var (
@@ -14,11 +17,8 @@ var (
 )
 
 func main() {
-	l := newLogger(true)
-	flag.BoolVar(&help, "help", false, "Show help")
-	flag.BoolVar(&isHook, "hook", false, "Indicates if pacman ran this program as a hook")
-	flag.BoolVar(&seedConfig, "seed-config", false, "Seed the config file with default values")
-	flag.Parse()
+	l := logger.NewLogger()
+	parseFlags()
 
 	if help {
 		flag.Usage()
@@ -26,34 +26,51 @@ func main() {
 	}
 
 	if seedConfig {
-		l.info("Seeding config file")
-		err := SeedConfig()
+		l.Info("Seeding config file")
+		err := config.SeedConfig()
 		if err != nil {
-			l.error(err.Error())
+			l.Error(err.Error())
 			return
 		}
-		l.info("Config file seeded")
+		l.Info("Config file seeded")
 		return
 	}
 
 	if !isHook {
-		l.error("This program should only be run as a pacman hook or with the -seed-config flag")
+		l.Error("This program should only be run as a pacman hook or with the -seed-config flag")
 		flag.Usage()
 		return
 	}
 
-	_ = GetConfig()
-
 	ppid := os.Getppid()
-	l.debug("Parent PID: ", ppid)
-	l.debug("Parent CMD: ", getProcessArgs(ppid))
+	pacmanArgs, err := getProcessArgs(ppid)
+	if err != nil {
+		l.Error("Could not get pacman args")
+		return
+	}
+
+	l.Debug("Parent PID: ", ppid)
+	l.Debug("Parent CMD: ", pacmanArgs)
+
+	err = snaphots.CreateSnapshot(pacmanArgs, ppid, config.GetConfig())
+	if err != nil {
+		l.Error(err.Error())
+		return
+	}
 }
 
-func getProcessArgs(pid int) string {
+func parseFlags() {
+	flag.BoolVar(&help, "help", false, "Show help")
+	flag.BoolVar(&isHook, "hook", false, "Indicates if pacman ran this program as a hook")
+	flag.BoolVar(&seedConfig, "seed-config", false, "Seed the config file with default values")
+	flag.Parse()
+}
+
+func getProcessArgs(pid int) (string, error) {
 	cmd := exec.Command("ps", "-p", fmt.Sprintf("%d", pid), "-o", "args=")
 	out, err := cmd.Output()
 	if err != nil {
-		fmt.Println(err)
+		return "", err
 	}
-	return string(out)
+	return string(out), nil
 }

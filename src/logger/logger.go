@@ -1,23 +1,29 @@
-package main
+package logger
 
 import (
 	"fmt"
+	"snapmate/config"
 	"time"
 )
 
-type logger struct {
+type Logger struct {
 	debugOutput bool
 }
 
-func newLogger(debugOutput bool) *logger {
-	return &logger{debugOutput: debugOutput}
+func newLogger(debugOutput bool) *Logger {
+	return &Logger{debugOutput: debugOutput}
+}
+
+func NewLogger() *Logger {
+	conf := config.GetConfig()
+	return newLogger(conf.DebugLog)
 }
 
 func getTimestamp() string {
 	return time.Now().Format(time.DateTime)
 }
 
-func (l *logger) debug(msg ...interface{}) {
+func (l *Logger) Debug(msg ...interface{}) {
 	if !l.debugOutput {
 		return
 	}
@@ -27,19 +33,19 @@ func (l *logger) debug(msg ...interface{}) {
 	fmt.Println(m)
 }
 
-func (l *logger) info(msg ...interface{}) {
+func (l *Logger) Info(msg ...interface{}) {
 	fullMsg := fmt.Sprint(msg...)
 	m := fmt.Sprintf("[%s] [INFO] %s", getTimestamp(), fullMsg)
 	fmt.Println(m)
 }
 
-func (l *logger) warn(msg ...interface{}) {
+func (l *Logger) Warn(msg ...interface{}) {
 	fullMsg := fmt.Sprint(msg...)
 	m := fmt.Sprintf("[%s] [WARN] %s", getTimestamp(), fullMsg)
 	fmt.Println(m)
 }
 
-func (l *logger) error(msg ...interface{}) {
+func (l *Logger) Error(msg ...interface{}) {
 	fullMsg := fmt.Sprint(msg...)
 	m := fmt.Sprintf("[%s] [ERROR] %s", getTimestamp(), fullMsg)
 	fmt.Println(m)

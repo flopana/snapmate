@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"errors"
@@ -15,23 +15,18 @@ type Conf struct {
 	DebugLog        bool
 }
 
+const ConfigPath = "/etc/snapmate/config.ini"
+
 func GetConfig() Conf {
 	defaultValueConf := getDefaultConfig()
-	home, err := os.UserHomeDir()
-	if err != nil {
-		fmt.Println("Could not get user home directory")
-		fmt.Println(err)
-		return defaultValueConf
-	}
-	path := home + "/.config/snapmate/config.ini"
 
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if _, err := os.Stat(ConfigPath); os.IsNotExist(err) {
 		fmt.Println("Config file not found, using default config")
 		return defaultValueConf
 	}
 
 	// Read config file
-	inidata, err := ini.Load(path)
+	inidata, err := ini.Load(ConfigPath)
 	if err != nil {
 		fmt.Println("Could not read config file")
 		fmt.Println(err)
@@ -44,6 +39,8 @@ func GetConfig() Conf {
 	section := inidata.Section("snapshots")
 	config.MaxSnapshots = section.Key("maxSnapshots").MustInt(defaultValueConf.MaxSnapshots)
 	config.DeleteSnapshots = section.Key("deleteSnapshots").MustBool(defaultValueConf.DeleteSnapshots)
+	config.AskUser = section.Key("askUser").MustBool(defaultValueConf.AskUser)
+	config.MinTimeBetween = section.Key("minTimeBetween").MustInt(defaultValueConf.MinTimeBetween)
 
 	section = inidata.Section("logging")
 	config.DebugLog = section.Key("debugLog").MustBool(defaultValueConf.DebugLog)
@@ -63,15 +60,9 @@ func getDefaultConfig() Conf {
 
 func SeedConfig() error {
 	defaultValueConf := getDefaultConfig()
-	home, err := os.UserHomeDir()
-	if err != nil {
-		fmt.Println("Could not get user home directory")
-		return err
-	}
-	path := home + "/.config/snapmate/config.ini"
 
 	// Check if config file already exists
-	if _, err := os.Stat(path); err == nil {
+	if _, err := os.Stat(ConfigPath); err == nil {
 		return errors.New("config file already exists")
 	}
 
@@ -80,9 +71,10 @@ func SeedConfig() error {
 	iniFile.Section("snapshots").Key("deleteSnapshots").SetValue(fmt.Sprintf("%t", defaultValueConf.DeleteSnapshots))
 	iniFile.Section("snapshots").Key("askUser").SetValue(fmt.Sprintf("%t", defaultValueConf.AskUser))
 	iniFile.Section("snapshots").Key("minTimeBetween").SetValue(fmt.Sprintf("%d", defaultValueConf.MinTimeBetween))
+
 	iniFile.Section("logging").Key("debugLog").SetValue(fmt.Sprintf("%t", defaultValueConf.DebugLog))
 
-	err = iniFile.SaveTo(path)
+	err := iniFile.SaveTo(ConfigPath)
 	if err != nil {
 		return err
 	}
