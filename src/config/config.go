@@ -10,9 +10,9 @@ import (
 type Conf struct {
 	MaxSnapshots    int
 	DeleteSnapshots bool
-	AskUser         bool // Ask user if a snapshot should be taken
-	MinTimeBetween  int  // Minimum time between snapshots in minutes
+	MinTimeBetween  int // Minimum time between snapshots in minutes
 	DebugLog        bool
+	DatabasePath    string // Path for the SQLite database
 }
 
 const Path = "/etc/snapmate/config.ini"
@@ -39,11 +39,13 @@ func GetConfig() Conf {
 	section := inidata.Section("snapshots")
 	config.MaxSnapshots = section.Key("maxSnapshots").MustInt(defaultValueConf.MaxSnapshots)
 	config.DeleteSnapshots = section.Key("deleteSnapshots").MustBool(defaultValueConf.DeleteSnapshots)
-	config.AskUser = section.Key("askUser").MustBool(defaultValueConf.AskUser)
 	config.MinTimeBetween = section.Key("minTimeBetween").MustInt(defaultValueConf.MinTimeBetween)
 
 	section = inidata.Section("logging")
 	config.DebugLog = section.Key("debugLog").MustBool(defaultValueConf.DebugLog)
+
+	section = inidata.Section("database")
+	config.DatabasePath = section.Key("path").String()
 
 	return config
 }
@@ -52,9 +54,9 @@ func getDefaultConfig() Conf {
 	return Conf{
 		MaxSnapshots:    5,
 		DeleteSnapshots: true,
-		AskUser:         false,
 		MinTimeBetween:  60,
 		DebugLog:        true,
+		DatabasePath:    "/home/snapmate.db",
 	}
 }
 
@@ -69,10 +71,9 @@ func SeedConfig() error {
 	iniFile := ini.Empty()
 	iniFile.Section("snapshots").Key("maxSnapshots").SetValue(fmt.Sprintf("%d", defaultValueConf.MaxSnapshots))
 	iniFile.Section("snapshots").Key("deleteSnapshots").SetValue(fmt.Sprintf("%t", defaultValueConf.DeleteSnapshots))
-	iniFile.Section("snapshots").Key("askUser").SetValue(fmt.Sprintf("%t", defaultValueConf.AskUser))
 	iniFile.Section("snapshots").Key("minTimeBetween").SetValue(fmt.Sprintf("%d", defaultValueConf.MinTimeBetween))
-
 	iniFile.Section("logging").Key("debugLog").SetValue(fmt.Sprintf("%t", defaultValueConf.DebugLog))
+	iniFile.Section("database").Key("path").SetValue(defaultValueConf.DatabasePath)
 
 	err := iniFile.SaveTo(Path)
 	if err != nil {

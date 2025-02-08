@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"os"
 	"snapmate/config"
+	"snapmate/db"
 	"snapmate/logger"
 	"snapmate/snaphots"
 )
@@ -27,7 +29,7 @@ func main() {
 		err := config.SeedConfig()
 		if err != nil {
 			l.Error(err.Error())
-			return
+			os.Exit(1)
 		}
 		l.Info("Config file seeded")
 		return
@@ -36,13 +38,20 @@ func main() {
 	if !isHook {
 		l.Error("This program should only be run as a pacman hook or with the -seed-config flag")
 		flag.Usage()
-		return
+		os.Exit(1)
 	}
 
-	err := snaphots.CreateSnapshot()
+	err := db.Migrate()
+	if err != nil {
+		l.Error("Could not migrate database. Exiting")
+		l.Error(err.Error())
+		os.Exit(1)
+	}
+
+	err = snaphots.CreateSnapshot()
 	if err != nil {
 		l.Error(err.Error())
-		return
+		os.Exit(1)
 	}
 }
 

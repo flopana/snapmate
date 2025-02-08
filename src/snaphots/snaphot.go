@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"snapmate/db"
 	"snapmate/logger"
 	"strings"
 )
@@ -42,6 +43,13 @@ func timeshiftCreateSnapshot(pacmanArgs string) error {
 		return err
 	}
 	l.Info("Created snapshot: ", snapshotName)
+	l.Info("Snapshot comment: ", pacmanArgs)
+	l.Debug("Inserting snapshot into database")
+	snapshot, err := db.CreateSnapshot(snapshotName, pacmanArgs)
+	if err != nil {
+		return err
+	}
+	l.Debug("Snapshot inserted into database with ID: ", snapshot.ID)
 
 	return nil
 }
