@@ -2,9 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"os"
-	"os/exec"
 	"snapmate/config"
 	"snapmate/logger"
 	"snapmate/snaphots"
@@ -42,17 +39,7 @@ func main() {
 		return
 	}
 
-	ppid := os.Getppid()
-	pacmanArgs, err := getProcessArgs(ppid)
-	if err != nil {
-		l.Error("Could not get pacman args")
-		return
-	}
-
-	l.Debug("Parent PID: ", ppid)
-	l.Debug("Parent CMD: ", pacmanArgs)
-
-	err = snaphots.CreateSnapshot(pacmanArgs, ppid, config.GetConfig())
+	err := snaphots.CreateSnapshot()
 	if err != nil {
 		l.Error(err.Error())
 		return
@@ -64,13 +51,4 @@ func parseFlags() {
 	flag.BoolVar(&isHook, "hook", false, "Indicates if pacman ran this program as a hook")
 	flag.BoolVar(&seedConfig, "seed-config", false, "Seed the config file with default values")
 	flag.Parse()
-}
-
-func getProcessArgs(pid int) (string, error) {
-	cmd := exec.Command("ps", "-p", fmt.Sprintf("%d", pid), "-o", "args=")
-	out, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
 }

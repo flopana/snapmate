@@ -15,18 +15,18 @@ type Conf struct {
 	DebugLog        bool
 }
 
-const ConfigPath = "/etc/snapmate/config.ini"
+const Path = "/etc/snapmate/config.ini"
 
 func GetConfig() Conf {
 	defaultValueConf := getDefaultConfig()
 
-	if _, err := os.Stat(ConfigPath); os.IsNotExist(err) {
+	if _, err := os.Stat(Path); os.IsNotExist(err) {
 		fmt.Println("Config file not found, using default config")
 		return defaultValueConf
 	}
 
 	// Read config file
-	inidata, err := ini.Load(ConfigPath)
+	inidata, err := ini.Load(Path)
 	if err != nil {
 		fmt.Println("Could not read config file")
 		fmt.Println(err)
@@ -62,7 +62,7 @@ func SeedConfig() error {
 	defaultValueConf := getDefaultConfig()
 
 	// Check if config file already exists
-	if _, err := os.Stat(ConfigPath); err == nil {
+	if _, err := os.Stat(Path); err == nil {
 		return errors.New("config file already exists")
 	}
 
@@ -74,7 +74,7 @@ func SeedConfig() error {
 
 	iniFile.Section("logging").Key("debugLog").SetValue(fmt.Sprintf("%t", defaultValueConf.DebugLog))
 
-	err := iniFile.SaveTo(ConfigPath)
+	err := iniFile.SaveTo(Path)
 	if err != nil {
 		return err
 	}

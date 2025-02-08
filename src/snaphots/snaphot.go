@@ -3,14 +3,20 @@ package snaphots
 import (
 	"bufio"
 	"errors"
+	"fmt"
+	"os"
 	"os/exec"
-	"snapmate/config"
 	"snapmate/logger"
 	"strings"
 )
 
-func CreateSnapshot(pacmanArgs string, ppid int, conf config.Conf) error {
-	err := timeshiftCreateSnapshot(pacmanArgs)
+func CreateSnapshot() error {
+	pacmanArgs, err := getProcessArgs(os.Getppid())
+	if err != nil {
+		return err
+	}
+
+	err = timeshiftCreateSnapshot(pacmanArgs)
 	if err != nil {
 		return err
 	}
@@ -56,4 +62,15 @@ func parseTimeshiftOutput(out string) (string, error) {
 	}
 
 	return "", errors.New("could not parse timeshift output")
+}
+
+func getProcessArgs(pid int) (string, error) {
+	l := logger.NewLogger()
+	cmd := exec.Command("ps", "-p", fmt.Sprintf("%d", pid), "-o", "args=")
+	out, err := cmd.Output()
+	if err != nil {
+		l.Error("Could not get process args")
+		return "", err
+	}
+	return string(out), nil
 }
