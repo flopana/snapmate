@@ -3,11 +3,34 @@ package snaphots
 import (
 	"os"
 	"os/exec"
+	"snapmate/config"
 	"snapmate/db"
 	"snapmate/logger"
+	"time"
 )
 
 func CreateSnapshot() error {
+	conf := config.GetConfig()
+
+	newestSnapshot, err := db.GetNewestSnapshot()
+	if err != nil {
+		return err
+	}
+
+	if newestSnapshot != nil {
+		now := time.Now()
+		diff := now.Sub(newestSnapshot.CreatedAt)
+		diffMinutes := int(diff.Minutes())
+		if diffMinutes < conf.MinTimeBetween {
+			l := logger.NewLogger()
+			l.Info("Minimum time between snapshots not reached, not creating snapshot")
+			l.Debug("Minutes since last snapshot: ", diffMinutes)
+			l.Debug("Minimum time between snapshots: ", conf.MinTimeBetween)
+
+			return nil
+		}
+	}
+
 	pacmanArgs, err := getProcessArgs(os.Getppid())
 	if err != nil {
 		return err

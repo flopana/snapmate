@@ -81,6 +81,22 @@ func GetOldestSnapshots() ([]Snapshot, error) {
 	return snapshots, nil
 }
 
+func GetNewestSnapshot() (*Snapshot, error) {
+	l := logger.NewLogger()
+	db, err := getDb()
+	if err != nil {
+		return nil, err
+	}
+
+	var snapshot Snapshot
+	result := db.Order("created_at desc").First(&snapshot)
+	if result.Error != nil {
+		l.Error("Could not get newest snapshot")
+		return nil, result.Error
+	}
+	return &snapshot, nil
+}
+
 func DeleteSnapshot(snapshot *Snapshot) error {
 	l := logger.NewLogger()
 	db, err := getDb()
