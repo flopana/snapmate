@@ -12,23 +12,17 @@ import (
 func CreateSnapshot() error {
 	conf := config.GetConfig()
 
-	newestSnapshot, err := db.GetNewestSnapshot()
+	createSnapshot, err := checkForMinimumTimeBetween(conf)
 	if err != nil {
 		return err
 	}
 
-	if newestSnapshot != nil {
-		now := time.Now()
-		diff := now.Sub(newestSnapshot.CreatedAt)
-		diffMinutes := int(diff.Minutes())
-		if diffMinutes < conf.MinTimeBetween {
-			l := logger.NewLogger()
-			l.Info("Minimum time between snapshots not reached, not creating snapshot")
-			l.Debug("Minutes since last snapshot: ", diffMinutes)
-			l.Debug("Minimum time between snapshots: ", conf.MinTimeBetween)
-
-			return nil
+	if !createSnapshot {
+		err := deleteOldestSnapshots()
+		if err != nil {
+			return err
 		}
+		return nil
 	}
 
 	pacmanArgs, err := getProcessArgs(os.Getppid())
@@ -47,6 +41,29 @@ func CreateSnapshot() error {
 	}
 
 	return nil
+}
+
+func checkForMinimumTimeBetween(conf config.Conf) (bool, error) {
+	newestSnapshot, err := db.GetNewestSnapshot()
+	if err != nil {
+		return false, err
+	}
+
+	if newestSnapshot != nil {
+		now := time.Now()
+		diff := now.Sub(newestSnapshot.CreatedAt)
+		diffMinutes := int(diff.Minutes())
+		if diffMinutes < conf.MinTimeBetween {
+			l := logger.NewLogger()
+			l.Info("Minimum time between snapshots not reached, not creating snapshot")
+			l.Debug("Minutes since last snapshot: ", diffMinutes)
+			l.Debug("Minimum time between snapshots: ", conf.MinTimeBetween)
+
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 func timeshiftCreateSnapshot(pacmanArgs string) error {
