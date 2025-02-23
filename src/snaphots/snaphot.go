@@ -80,5 +80,7 @@ func getProcessArgs(pid int) (string, error) {
 		l.Error("Could not get process args")
 		return "", err
 	}
-	return string(out), nil
+	outStr := strings.TrimSpace(string(out))
+
+	return outStr, nil
 }
