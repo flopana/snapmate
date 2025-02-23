@@ -64,3 +64,33 @@ func GetSnapshotById(id uint) (*Snapshot, error) {
 	}
 	return &snapshot, nil
 }
+
+func GetOldestSnapshots() ([]Snapshot, error) {
+	l := logger.NewLogger()
+	db, err := getDb()
+	if err != nil {
+		return nil, err
+	}
+
+	var snapshots []Snapshot
+	result := db.Order("created_at asc").Find(&snapshots)
+	if result.Error != nil {
+		l.Error("Could not get oldest snapshots")
+		return nil, result.Error
+	}
+	return snapshots, nil
+}
+
+func DeleteSnapshot(snapshot *Snapshot) error {
+	l := logger.NewLogger()
+	db, err := getDb()
+	if err != nil {
+		return err
+	}
+	result := db.Delete(snapshot)
+	if result.Error != nil {
+		l.Error("Could not delete snapshot")
+		return result.Error
+	}
+	return nil
+}
