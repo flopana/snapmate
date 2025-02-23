@@ -32,9 +32,10 @@ func deleteOldestSnapshots() error {
 	conf := config.GetConfig()
 
 	if !conf.DeleteSnapshots {
-		l.Info("DeleteSnapshots is false, not deleting snapshots")
+		l.Info("deleteSnapshots is false, not deleting snapshots")
 		return nil
 	}
+	l.Info("Deleting snapshots if necessary")
 
 	snapshots, err := db.GetOldestSnapshots()
 	if err != nil {
@@ -45,7 +46,7 @@ func deleteOldestSnapshots() error {
 	l.Debug("MaxSnapshots: ", conf.MaxSnapshots)
 
 	if len(snapshots) <= conf.MaxSnapshots {
-		l.Info("Number of snapshots is less than MaxSnapshots, not deleting any")
+		l.Info("Number of snapshots is less or equal than maxSnapshots, not deleting any")
 		return nil
 	}
 
