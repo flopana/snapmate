@@ -46,22 +46,6 @@ func CreateSnapshot(name string, comment string) (*Snapshot, error) {
 		return nil, result.Error
 	}
 
-	return GetSnapshotById(snapshot.ID)
-}
-
-func GetSnapshotById(id uint) (*Snapshot, error) {
-	l := logger.NewLogger()
-	db, err := getDb()
-	if err != nil {
-		return nil, err
-	}
-
-	var snapshot Snapshot
-	result := db.First(&snapshot, id)
-	if result.Error != nil {
-		l.Error("Could not get snapshot")
-		return nil, result.Error
-	}
 	return &snapshot, nil
 }
 
