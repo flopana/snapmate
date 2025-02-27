@@ -1,5 +1,5 @@
 pkgname=snapmate
-pkgver=0.0.2
+pkgver=0.0.1
 pkgrel=1
 pkgdesc="Timeshift snapshot utility to create snapshots before Upgrade with useful commentS"
 arch=('x86_64')
@@ -30,6 +30,8 @@ package() {
 
   install -Dm755 "src/$pkgname" "$pkgdir/usr/bin/$pkgname"
   install -Dm644 00-snapmate.hook "$pkgdir/usr/share/libalpm/hooks/00-snapmate.hook"
+  install -Dm644 config.ini "$pkgdir/etc/snapmate/config.ini"
+
   install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
