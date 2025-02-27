@@ -1,0 +1,9 @@
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = *
+
+[Action]
+Description = Running snapmate
+When = PreTransaction
+Exec = /usr/bin/snapmate --hook
