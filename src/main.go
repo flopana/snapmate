@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
-	"os/exec"
+	"snapmate/config"
+	"snapmate/db"
+	"snapmate/logger"
+	"snapmate/snaphots"
 )
 
 var (
@@ -14,10 +16,8 @@ var (
 )
 
 func main() {
-	flag.BoolVar(&help, "help", false, "Show help")
-	flag.BoolVar(&isHook, "hook", false, "Indicates if pacman ran this program as a hook")
-	flag.BoolVar(&seedConfig, "seed-config", false, "Seed the config file with default values")
-	flag.Parse()
+	l := logger.NewLogger()
+	parseFlags()
 
 	if help {
 		flag.Usage()
@@ -25,29 +25,39 @@ func main() {
 	}
 
 	if seedConfig {
-		fmt.Println("Seeding config")
-		SeedConfig()
+		l.Info("Seeding config file")
+		err := config.SeedConfig()
+		if err != nil {
+			l.Error(err.Error())
+			os.Exit(1)
+		}
+		l.Info("Config file seeded")
 		return
 	}
 
 	if !isHook {
-		fmt.Println("This program should only be run as a pacman hook or with the -seed-config flag")
+		l.Error("This program should only be run as a pacman hook or with the -seed-config flag")
 		flag.Usage()
-		return
+		os.Exit(1)
 	}
 
-	_ = GetConfig()
+	err := db.Migrate()
+	if err != nil {
+		l.Error("Could not migrate database. Exiting")
+		l.Error(err.Error())
+		os.Exit(1)
+	}
 
-	ppid := os.Getppid()
-	fmt.Println("Parent PID: ", ppid)
-	fmt.Println("Parent CMD: ", getProcessArgs(ppid))
+	err = snaphots.CreateSnapshot()
+	if err != nil {
+		l.Error(err.Error())
+		os.Exit(1)
+	}
 }
 
-func getProcessArgs(pid int) string {
-	cmd := exec.Command("ps", "-p", fmt.Sprintf("%d", pid), "-o", "args=")
-	out, err := cmd.Output()
-	if err != nil {
-		fmt.Println(err)
-	}
-	return string(out)
+func parseFlags() {
+	flag.BoolVar(&help, "help", false, "Show help")
+	flag.BoolVar(&isHook, "hook", false, "Indicates if pacman ran this program as a hook")
+	flag.BoolVar(&seedConfig, "seed-config", false, "Seed the config file with default values")
+	flag.Parse()
 }
