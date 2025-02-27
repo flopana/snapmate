@@ -1,8 +1,8 @@
 pkgname=snapmate
-pkgver=0.1.0
+pkgver=0.0.2
 pkgrel=1
 pkgdesc="Timeshift snapshot utility to create snapshots before Upgrade with useful commentS"
-arch=('any')
+arch=('x86_64')
 url="https://github.com/yourusername/your-project-name"
 license=('BSD 3-Clause')
 depends=('timeshift')
@@ -11,7 +11,7 @@ source=("$pkgname-$pkgver.tar.gz::https://github.com/flopana/$pkgname/archive/v$
 sha256sums=('SKIP') # Replace with actual checksum when available
 
 build() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgname-$pkgver/src"
 
   # Set GOPATH to a temporary directory within the build directory
   export GOPATH="$srcdir/gopath"
@@ -28,7 +28,7 @@ build() {
 package() {
   cd "$pkgname-$pkgver"
 
-  install -Dm755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm755 "src/$pkgname" "$pkgdir/usr/bin/$pkgname"
   install -Dm644 00-snapmate.hook "$pkgdir/usr/share/libalpm/hooks/00-snapmate.hook"
   install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
