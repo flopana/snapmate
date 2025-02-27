@@ -3,6 +3,7 @@ package db
 import (
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
+	"os"
 	"snapmate/config"
 	"snapmate/logger"
 )
@@ -25,12 +26,33 @@ func Migrate() error {
 func getDb() (*gorm.DB, error) {
 	l := logger.NewLogger()
 	conf := config.GetConfig()
+
+	err := checkIfDatabaseExists()
+	if err != nil {
+		return nil, err
+	}
+
 	db, err := gorm.Open(sqlite.Open(conf.DatabasePath), &gorm.Config{})
 	if err != nil {
 		l.Error("Could not connect to database")
 		return nil, err
 	}
 	return db, nil
+}
+
+func checkIfDatabaseExists() error {
+	l := logger.NewLogger()
+	conf := config.GetConfig()
+	if _, err := os.Stat(conf.DatabasePath); os.IsNotExist(err) {
+		l.Warn("Database does not exist, creating it")
+		_, err := os.Create(conf.DatabasePath)
+		if err != nil {
+			l.Error("Could not create database")
+			return err
+		}
+	}
+
+	return nil
 }
 
 func CreateSnapshot(name string, comment string) (*Snapshot, error) {
@@ -72,8 +94,18 @@ func GetNewestSnapshot() (*Snapshot, error) {
 		return nil, err
 	}
 
+	var count int64
+	result := db.Model(&Snapshot{}).Count(&count)
+	if result.Error != nil {
+		l.Error("Could not get count of snapshots")
+		return nil, result.Error
+	}
+	if count == 0 {
+		return nil, nil
+	}
+
 	var snapshot Snapshot
-	result := db.Order("created_at desc").First(&snapshot)
+	result = db.Order("created_at desc").First(&snapshot)
 	if result.Error != nil {
 		l.Error("Could not get newest snapshot")
 		return nil, result.Error
