@@ -7,7 +7,7 @@ url="https://github.com/yourusername/your-project-name"
 license=('BSD 3-Clause')
 depends=('timeshift')
 makedepends=('go')
-source=("$pkgname-$pkgver.tar.zst::https://github.com/yourusername/$pkgname/archive/v$pkgver.tar.zst")
+source=("$pkgname-$pkgver.tar.gz::https://github.com/flopana/$pkgname/archive/v$pkgver.tar.gz")
 sha256sums=('SKIP') # Replace with actual checksum when available
 
 build() {
