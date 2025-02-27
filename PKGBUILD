@@ -1,9 +1,9 @@
 pkgname=snapmate
 pkgver=0.0.1
 pkgrel=1
-pkgdesc="Timeshift snapshot utility to create snapshots before Upgrade with useful commentS"
+pkgdesc="Timeshift snapshot utility to create snapshots before upgrade with useful comments"
 arch=('x86_64')
-url="https://github.com/yourusername/your-project-name"
+url="https://github.com/flopana/snapmate"
 license=('BSD 3-Clause')
 depends=('timeshift')
 makedepends=('go')
