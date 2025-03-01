@@ -9,20 +9,12 @@ import (
 	"time"
 )
 
-func CreateSnapshot() error {
+func CreateSnapshot(skipSnapshot bool) error {
 	conf := config.GetConfig()
 
-	createSnapshot, err := checkForMinimumTimeBetween(conf)
+	minTimeReached, err := checkForMinimumTimeBetween(conf)
 	if err != nil {
 		return err
-	}
-
-	if !createSnapshot {
-		err := deleteOldestSnapshots()
-		if err != nil {
-			return err
-		}
-		return nil
 	}
 
 	pacmanArgs, err := getProcessArgs(os.Getppid())
@@ -30,9 +22,11 @@ func CreateSnapshot() error {
 		return err
 	}
 
-	err = timeshiftCreateSnapshot(pacmanArgs)
-	if err != nil {
-		return err
+	if minTimeReached && !skipSnapshot {
+		err = timeshiftCreateSnapshot(pacmanArgs)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = deleteOldestSnapshots()

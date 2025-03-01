@@ -35,7 +35,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = snaphots.CreateSnapshot()
+	skipSnapshot := false
+	if os.Getenv("SKIP_SNAPSHOT") != "" {
+		l.Info("Environment variable SKIP_SNAPSHOT is set, not creating snapshot")
+		skipSnapshot = true
+	}
+
+	err = snaphots.CreateSnapshot(skipSnapshot)
 	if err != nil {
 		l.Error(err.Error())
 		os.Exit(1)
