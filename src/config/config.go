@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"gopkg.in/ini.v1"
 	"os"
@@ -58,27 +57,4 @@ func getDefaultConfig() Conf {
 		DebugLog:        true,
 		DatabasePath:    "/home/snapmate.db",
 	}
-}
-
-func SeedConfig() error {
-	defaultValueConf := getDefaultConfig()
-
-	// Check if config file already exists
-	if _, err := os.Stat(Path); err == nil {
-		return errors.New("config file already exists")
-	}
-
-	iniFile := ini.Empty()
-	iniFile.Section("snapshots").Key("maxSnapshots").SetValue(fmt.Sprintf("%d", defaultValueConf.MaxSnapshots))
-	iniFile.Section("snapshots").Key("deleteSnapshots").SetValue(fmt.Sprintf("%t", defaultValueConf.DeleteSnapshots))
-	iniFile.Section("snapshots").Key("minTimeBetween").SetValue(fmt.Sprintf("%d", defaultValueConf.MinTimeBetween))
-	iniFile.Section("logging").Key("debugLog").SetValue(fmt.Sprintf("%t", defaultValueConf.DebugLog))
-	iniFile.Section("database").Key("path").SetValue(defaultValueConf.DatabasePath)
-
-	err := iniFile.SaveTo(Path)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
