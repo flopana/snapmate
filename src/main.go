@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"snapmate/db"
 	"snapmate/logger"
@@ -9,8 +10,9 @@ import (
 )
 
 var (
-	help   bool
-	isHook bool
+	help        bool
+	isHook      bool
+	versionFlag bool
 )
 
 func main() {
@@ -19,6 +21,11 @@ func main() {
 
 	if help {
 		flag.Usage()
+		return
+	}
+
+	if versionFlag {
+		fmt.Printf("%s version %s", name, version)
 		return
 	}
 
@@ -51,5 +58,6 @@ func main() {
 func parseFlags() {
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&isHook, "hook", false, "Indicates if pacman ran this program as a hook")
+	flag.BoolVar(&versionFlag, "version", false, "Show version info")
 	flag.Parse()
 }
